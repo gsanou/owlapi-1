@@ -114,7 +114,7 @@ public class ConceptProcessing
             if (ca.getIRIConcept().equals(iriConcept))
                 return ca;        
         return null;        
-    } 
+    }
     //Get assertions of a concept that is respesented by iriConcept
     public static ConceptAssertion getConceptAssertionFromFrequentConceptsFull(String strConceptName)
     {
@@ -122,6 +122,16 @@ public class ConceptProcessing
             if (Global.cutNameOfIRI(ca.getIRIConcept().toString()+">").equals(strConceptName))
                return ca; 
         return null;        
+    }
+    
+    public static void addIndividualConcept(String nameIndividual, String nameClass)
+    {
+        for(ConceptAssertion ca : Global.allFrequentConceptsFull)        
+            if (Global.cutNameOfIRI(ca.getIRIConcept().toString()).equals(nameClass))
+            {
+                ca.getIndividuals().addIndividual(nameIndividual);
+                return;
+            }
     }
     
 }

@@ -5,26 +5,17 @@
 package MDataProcessing;
 
 import MCommon.Global;
-import static MCommon.Global.knowledgeBase;
-import MDataProcessing.Assertion.ConceptAssertion;
 import MDataProcessing.Assertion.RoleAssertion;
-import static MDataProcessing.ConceptProcessing.CFCFFVgetIndividuals;
-import static MDataProcessing.ConceptProcessing.top;
-import MDataProcessing.Individual.ConceptIndividuals;
 import MDataProcessing.Individual.RoleIndividual;
 import MDataProcessing.Individual.RoleIndividuals;
 import MKnowledge.KnowledgeBase;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Set;
 import javax.swing.tree.DefaultMutableTreeNode;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
-import org.semanticweb.owlapi.model.OWLClassExpression;
 
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
-import org.semanticweb.owlapi.model.OWLNamedObject;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLObjectPropertyExpression;
 import org.semanticweb.owlapi.reasoner.InferenceType;
@@ -131,5 +122,14 @@ public class RoleProcessing {
             }
         }
         return null;
+    }
+    public static void addIndividualRole(String DomaninnameIndividual,String RangenameIndividual, String nameClass)
+    {
+        for(RoleAssertion ca : Global.allFrequentRolesFull)        
+            if (Global.cutNameOfIRI(ca.getIRIRole().toString()).equals(nameClass))
+            {
+                ca.getIndividuals().addIndividual(DomaninnameIndividual,RangenameIndividual);
+                return;
+            }
     }
 }

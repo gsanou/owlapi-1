@@ -149,7 +149,7 @@ public class InfoIndividualForm extends javax.swing.JFrame {
         
         for(DataAssertion a:Global.allFrequentDatasFull)
         {
-            if(DataProcessing.isLeaf(a.getDataName()))
+            //if(DataProcessing.isLeaf(a.getDataName()))
             for (DataIndividual col : a.getIndividuals().getIndividuals()) {
                 if(col.getDomain().equals(this.mainNameIndividual)||col.getRange().equals(this.mainNameIndividual))
                 {

@@ -6,30 +6,20 @@
 package OWLapi;
 
 import MCommon.Global;
-import static MCommon.Global.knowledgeBase;
 import MDataProcessing.Assertion.ConceptAssertion;
-import MDataProcessing.Assertion.RoleAssertion;
 import MDataProcessing.ConceptProcessing;
+import static MDataProcessing.ConceptProcessing.CFCFFVgetIndividuals;
 import MDataProcessing.DataProcessing;
 import MDataProcessing.Individual.ConceptIndividuals;
 import MDataProcessing.RoleProcessing;
 import MKnowledge.KnowledgeBase;
-import com.clarkparsia.owlapiv3.OWL;
-import static com.clarkparsia.pellet.utils.TermFactory.inv;
+import static com.clarkparsia.owlapiv3.OWL.factory;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import static java.util.Collections.list;
-import java.util.HashSet;
-import java.util.Map;
-import static java.util.Objects.hash;
 import java.util.Set;
-import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
@@ -37,25 +27,25 @@ import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
-import javax.swing.JRadioButtonMenuItem;
 import javax.swing.SwingUtilities;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
-import jdk.nashorn.internal.runtime.regexp.JoniRegExp;
-import org.semanticweb.HermiT.Reasoner;
+import org.semanticweb.owlapi.model.AddAxiom;
 import org.semanticweb.owlapi.model.IRI;
-import org.semanticweb.owlapi.model.OWLAnnotation;
+import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
-import org.semanticweb.owlapi.model.OWLException;
+import org.semanticweb.owlapi.model.OWLClassAssertionAxiom;
+import org.semanticweb.owlapi.model.OWLDataProperty;
+import org.semanticweb.owlapi.model.OWLDataPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLIndividual;
+import org.semanticweb.owlapi.model.OWLLiteral;
+import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
+import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLOntologyFormat;
-import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import org.semanticweb.owlapi.model.OWLOntologyStorageException;
+import static org.semanticweb.owlapi.vocab.OWL2Datatype.Category.URI;
 
 /**
  *
@@ -109,6 +99,7 @@ public class HomeForm extends javax.swing.JFrame {
         jtfDataDomain = new javax.swing.JTextField();
         jbadData = new javax.swing.JButton();
         jLabel3 = new javax.swing.JLabel();
+        jbtSave = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jmbtLoadOntology = new javax.swing.JCheckBoxMenuItem();
@@ -157,6 +148,11 @@ public class HomeForm extends javax.swing.JFrame {
         jLabel5.setText("Domain:");
 
         jbAddRole.setText("Add Role");
+        jbAddRole.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbAddRoleActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanelRoleLayout = new javax.swing.GroupLayout(jPanelRole);
         jPanelRole.setLayout(jPanelRoleLayout);
@@ -191,6 +187,11 @@ public class HomeForm extends javax.swing.JFrame {
         );
 
         jbAddConcept.setText("Add Concept");
+        jbAddConcept.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbAddConceptActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanelConceptLayout = new javax.swing.GroupLayout(jPanelConcept);
         jPanelConcept.setLayout(jPanelConceptLayout);
@@ -218,6 +219,11 @@ public class HomeForm extends javax.swing.JFrame {
         jLabel7.setText("Domain:");
 
         jbadData.setText("Add Data");
+        jbadData.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbadDataActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanelDataLayout = new javax.swing.GroupLayout(jPanelData);
         jPanelData.setLayout(jPanelDataLayout);
@@ -251,6 +257,13 @@ public class HomeForm extends javax.swing.JFrame {
         );
 
         jLabel3.setText("Name:");
+
+        jbtSave.setText("Save");
+        jbtSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbtSaveActionPerformed(evt);
+            }
+        });
 
         jMenu1.setText("File");
 
@@ -325,12 +338,17 @@ public class HomeForm extends javax.swing.JFrame {
                     .addComponent(jPanelRole, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanelData, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jPanelData, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 211, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(18, 18, 18)
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 211, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jbtSave)))
                 .addGap(34, 34, 34))
         );
         layout.setVerticalGroup(
@@ -353,7 +371,8 @@ public class HomeForm extends javax.swing.JFrame {
                     .addComponent(jPanelConcept, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jPanelData, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(38, 38, 38))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jbtSave))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel3)
                         .addGap(0, 0, Short.MAX_VALUE)))
@@ -422,15 +441,85 @@ public class HomeForm extends javax.swing.JFrame {
                     }
                 }
               });
+            jTreeRole.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent me) {
+                  doMouseClickedRole(me);
+                }
+                public void mousePressed ( MouseEvent e )
+                {
+                    if ( SwingUtilities.isRightMouseButton ( e ) )
+                    {
+                        TreePath path = jTreeRole.getPathForLocation ( e.getX (), e.getY () );
+                        Rectangle pathBounds = jTreeRole.getUI ().getPathBounds ( jTreeRole, path );
+                        if ( pathBounds != null && pathBounds.contains ( e.getX (), e.getY () ) )
+                        {
+                            JPopupMenu menu = new JPopupMenu ();
+                            
+                            JMenuItem menuItem = new JMenuItem(new AbstractAction("Add new Relationship") {
+                                public void actionPerformed(ActionEvent e) {
+                                    System.out.print("xx");
+                                }
+                            });
+                            menu.add (menuItem);
+                            menu.show ( jTreeRole, pathBounds.x, pathBounds.y + pathBounds.height );
+                        }
+                    }
+                }
+              });
+            jTreeData.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent me) {
+                  doMouseClickedData(me);
+                }
+                public void mousePressed ( MouseEvent e )
+                {
+                    if ( SwingUtilities.isRightMouseButton ( e ) )
+                    {
+                        TreePath path = jTreeData.getPathForLocation ( e.getX (), e.getY () );
+                        Rectangle pathBounds = jTreeData.getUI ().getPathBounds ( jTreeData, path );
+                        if ( pathBounds != null && pathBounds.contains ( e.getX (), e.getY () ) )
+                        {
+                            JPopupMenu menu = new JPopupMenu ();
+                            
+                            JMenuItem menuItem = new JMenuItem(new AbstractAction("Add new Relationship") {
+                                public void actionPerformed(ActionEvent e) {
+                                    System.out.print("xx");
+                                }
+                            });
+                            menu.add (menuItem);
+                            menu.show ( jTreeData, pathBounds.x, pathBounds.y + pathBounds.height );
+                        }
+                    }
+                }
+              });
             JPopupMenu popupMenu = new JPopupMenu();
             popupMenu.add(new JMenuItem(new AbstractAction("Show") {
                 public void actionPerformed(ActionEvent e) { 
+                    //ConceptProcessing.createFrequentConceptsForFullVersion(Global.knowledgeBase);
+            
+                    //RoleProcessing.createFrequentRolesForFullVersion(Global.knowledgeBase);
+
+                    //DataProcessing.createFrequentDatasForFullVersion(Global.knowledgeBase);
                     InfoIndividualForm aa = new InfoIndividualForm();
                     aa.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                     aa.setVisible(true);
                 }
             }));
             popupMenu.add(new JPopupMenu.Separator());
+            popupMenu.add(new JMenuItem(new AbstractAction("Paste to Role's Domain") {
+                public void actionPerformed(ActionEvent e) { 
+                    jtfDomainRole.setText(InfoIndividualForm.nameIndividual);
+                }
+            }));
+            popupMenu.add(new JMenuItem(new AbstractAction("Paste to Role's Range") {
+                public void actionPerformed(ActionEvent e) { 
+                    jtfRangeRole.setText(InfoIndividualForm.nameIndividual);
+                }
+            }));
+            popupMenu.add(new JMenuItem(new AbstractAction("Paste to Data's Domain") {
+                public void actionPerformed(ActionEvent e) { 
+                    jtfDataDomain.setText(InfoIndividualForm.nameIndividual);
+                }
+            }));
             popupMenu.add(new JMenuItem("Clear"));
             
             lists.addMouseListener(new MouseAdapter() {
@@ -454,13 +543,89 @@ public class HomeForm extends javax.swing.JFrame {
     private void listsValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_listsValueChanged
         
     }//GEN-LAST:event_listsValueChanged
-    void doMouseClicked(MouseEvent me) {
-        //ArrayList<RoleAssertion> thang =Global.allFrequentRolesFull;
-        TreePath tp = jtreeConcept.getPathForLocation(me.getX(), me.getY());
+
+    private void jbAddConceptActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbAddConceptActionPerformed
+        for (OWLClass col : Global.knowledgeBase.getOntology().getClassesInSignature()) {
+            if(Global.cutNameOfIRI(col.getIRI().toString()+">").equals(tp.getPathComponent(tp.getPathCount()-1).toString()))
+            {
+                OWLNamedIndividual mary = Global.knowledgeBase.getDataFactory().getOWLNamedIndividual(jtfnameConcept.getText(), Global.knowledgeBase.getPrefix());
+                OWLClassAssertionAxiom classAssertion = Global.knowledgeBase.getDataFactory().getOWLClassAssertionAxiom(col, mary);
+                Global.knowledgeBase.getOntologyManager().addAxiom(Global.knowledgeBase.getOntology(), classAssertion);
+                ConceptProcessing.addIndividualConcept(jtfnameConcept.getText(),Global.cutNameOfIRI(col.getIRI().toString()));
+                break;
+            }
+        }
+    }//GEN-LAST:event_jbAddConceptActionPerformed
+
+    private void jbtSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtSaveActionPerformed
+        try {
+            Global.knowledgeBase.getOntologyManager().saveOntology(Global.knowledgeBase.getOntology());
+        } catch (OWLOntologyStorageException ex) {
+            Logger.getLogger(HomeForm.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jbtSaveActionPerformed
+
+    private void jbAddRoleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbAddRoleActionPerformed
+        for (OWLObjectProperty col : Global.knowledgeBase.getOntology().getObjectPropertiesInSignature()) {
+            if(Global.cutNameOfIRI(col.getIRI().toString()+">").equals(tprole.getPathComponent(tprole.getPathCount()-1).toString()))
+            {
+                OWLIndividual matthew = Global.knowledgeBase.getDataFactory().getOWLNamedIndividual(IRI.create(Global.knowledgeBase.getIRI().toString()+ "#" + jtfDomainRole.getText()));
+                OWLIndividual peter = Global.knowledgeBase.getDataFactory().getOWLNamedIndividual(IRI.create(Global.knowledgeBase.getIRI().toString() + "#" + jtfRangeRole.getText()));
+                OWLObjectPropertyAssertionAxiom assertion = Global.knowledgeBase.getDataFactory().getOWLObjectPropertyAssertionAxiom(col,matthew, peter);
+                Global.knowledgeBase.getOntologyManager().addAxiom(Global.knowledgeBase.getOntology(), assertion);
+                RoleProcessing.addIndividualRole(jtfDomainRole.getText(),jtfRangeRole.getText(),Global.cutNameOfIRI(col.getIRI().toString()));
+                break;
+            }
+        }
+        
+    }//GEN-LAST:event_jbAddRoleActionPerformed
+
+    private void jbadDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbadDataActionPerformed
+        for (OWLDataProperty col : Global.knowledgeBase.getOntology().getDataPropertiesInSignature()) {
+            if(Global.cutNameOfIRI(col.getIRI().toString()+">").equals(tpdata.getPathComponent(tpdata.getPathCount()-1).toString()))
+            {
+                OWLNamedIndividual A = Global.knowledgeBase.getDataFactory().getOWLNamedIndividual(IRI.create(Global.knowledgeBase.getIRI().toString()+ "#" + jtfDataDomain.getText()));
+                OWLLiteral lit = factory.getOWLLiteral(jtfDataRange.getText());
+                OWLDataPropertyAssertionAxiom ax = 
+                          factory.getOWLDataPropertyAssertionAxiom(col, A, lit);
+                AddAxiom addAx = new AddAxiom(Global.knowledgeBase.getOntology(), ax);
+                Global.knowledgeBase.getOntologyManager().applyChange(addAx);
+                RoleProcessing.addIndividualRole(jtfDataDomain.getText(),jtfDataRange.getText(),Global.cutNameOfIRI(col.getIRI().toString()));
+                break;
+            }
+        }
+        
+        
+        
+    }//GEN-LAST:event_jbadDataActionPerformed
+    private TreePath tp;
+    private void doMouseClicked(MouseEvent me) {
+        //TreePath tp = jtreeConcept.getPathForLocation(me.getX(), me.getY());
+        tp=jtreeConcept.getPathForLocation(me.getX(), me.getY());
         if (tp != null)
         {
           System.out.print(tp.getPathComponent(tp.getPathCount()-1).toString());
           listConceptsValueChanged(tp);
+        }
+    }
+    private TreePath tprole;
+    private void doMouseClickedRole(MouseEvent me)
+    {
+        tprole=jTreeRole.getPathForLocation(me.getX(), me.getY());
+        if (tprole != null)
+        {
+          System.out.print(tprole.getPathComponent(tprole.getPathCount()-1).toString());
+          //listConceptsValueChanged(tprole);
+        }
+    }
+    private TreePath tpdata;
+    private void doMouseClickedData(MouseEvent me)
+    {
+        tpdata=jTreeData.getPathForLocation(me.getX(), me.getY());
+        if (tprole != null)
+        {
+          System.out.print(tpdata.getPathComponent(tpdata.getPathCount()-1).toString());
+          //listConceptsValueChanged(tprole);
         }
     }
     private void listConceptsValueChanged(TreePath tp) {                                          
@@ -549,6 +714,7 @@ public class HomeForm extends javax.swing.JFrame {
     private javax.swing.JButton jbAddConcept;
     private javax.swing.JButton jbAddRole;
     private javax.swing.JButton jbadData;
+    private javax.swing.JButton jbtSave;
     private javax.swing.JMenu jmAbout;
     private javax.swing.JCheckBoxMenuItem jmbtAbout;
     private javax.swing.JRadioButtonMenuItem jmbtExit;

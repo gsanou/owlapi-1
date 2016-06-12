@@ -7,6 +7,7 @@ package MDataProcessing;
 
 import MCommon.Global;
 import MDataProcessing.Assertion.DataAssertion;
+import MDataProcessing.Assertion.RoleAssertion;
 import static MDataProcessing.ConceptProcessing.top;
 import MDataProcessing.Individual.DataIndividual;
 import MDataProcessing.Individual.DataIndividuals;
@@ -111,5 +112,14 @@ public class DataProcessing {
 
             DataAssertion dataAssertion = new DataAssertion(owlDataProperty.getIRI(), dataIndividuals);
         return dataAssertion;
+    }
+    public static void addIndividualData(String DomaninnameIndividual,String RangenameIndividual, String nameClass)
+    {
+        for(DataAssertion ca : Global.allFrequentDatasFull)        
+            if (Global.cutNameOfIRI(ca.getIRIData().toString()).equals(nameClass))
+            {
+                ca.getIndividuals().addIndividual(DomaninnameIndividual,RangenameIndividual);
+                return;
+            }
     }
 }

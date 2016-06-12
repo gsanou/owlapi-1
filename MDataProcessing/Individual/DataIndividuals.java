@@ -67,6 +67,7 @@ public class DataIndividuals {
     {
         this.domainIndividuals.add(strDomain);
         this.rangeIndividuals.add(strRange);
+        this.individuals.add(new DataIndividual(strDomain, strRange));
     }
     
     //Check if individuals contains roleIndividual
